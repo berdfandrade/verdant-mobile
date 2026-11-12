@@ -104,3 +104,4 @@ Cobrem o cliente HTTP (token, refresh único, logout quando o refresh falha), a 
 - [ ] Editar o perfil completo (bio, interesses, "sobre mim")
 - [ ] Indicador de "digitando" e confirmação de leitura
 - [ ] Build com EAS (`npx eas-cli@latest build`)
+# verdant-mobile
