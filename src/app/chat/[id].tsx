@@ -103,27 +103,28 @@ export default function ChatScreen() {
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
-        <FlatList
-          inverted
-          data={chat.messages}
-          keyExtractor={item => item._id}
-          contentContainerClassName="w-full max-w-content grow gap-3 self-center p-4"
-          onEndReached={chat.loadOlder}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={chat.isLoadingOlder ? <ActivityIndicator colorClassName="accent-primary" /> : undefined}
-          ListEmptyComponent={
-            // A lista é invertida: o "vazio" também é desenhado de cabeça para baixo
-            <View className="flex-1 -scale-y-100 items-center justify-center gap-3 p-6">
-              <View className="size-16 items-center justify-center rounded-full bg-primary-soft">
-                <Icon name="chatbubbles" size={28} colorClassName="accent-primary" />
-              </View>
-              <AppText variant="caption" className="text-center">
-                Vocês deram match! Mande a primeira mensagem para {firstName(other?.fullName)}.
-              </AppText>
+        {chat.messages.length ? (
+          <FlatList
+            inverted
+            data={chat.messages}
+            keyExtractor={item => item._id}
+            contentContainerClassName="w-full max-w-content grow gap-3 self-center p-4"
+            onEndReached={chat.loadOlder}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={chat.isLoadingOlder ? <ActivityIndicator colorClassName="accent-primary" /> : undefined}
+            renderItem={({ item }) => <Bubble message={item} mine={item.sender === myId} />}
+          />
+        ) : (
+          // Fora da lista invertida: dentro dela, cada plataforma desenha o "vazio" de um jeito
+          <View className="flex-1 items-center justify-center gap-3 p-6">
+            <View className="size-16 items-center justify-center rounded-full bg-primary-soft">
+              <Icon name="chatbubbles" size={28} colorClassName="accent-primary" />
             </View>
-          }
-          renderItem={({ item }) => <Bubble message={item} mine={item.sender === myId} />}
-        />
+            <AppText variant="caption" className="text-center">
+              Vocês deram match! Mande a primeira mensagem para {firstName(other?.fullName)}.
+            </AppText>
+          </View>
+        )}
 
         {!chat.connected ? (
           <AppText variant="caption" className="text-center">
