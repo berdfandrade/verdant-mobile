@@ -1,12 +1,8 @@
-import { Platform } from 'react-native';
-
 /*
-  URL da API (verdant-nest).
-  Defina EXPO_PUBLIC_API_URL no .env. Sem ela:
-  - emulador Android acessa o host por 10.0.2.2
-  - iOS simulator / web usam localhost
-  Em celular físico use o IP da sua máquina na rede (ex.: http://192.168.0.10:3000).
+  URL da API (verdant-nest), usada pelo HTTP e pelo socket.
+  Por padrão é a API no Railway, que funciona em qualquer rede, emulador ou build.
+  Para usar a API local, defina EXPO_PUBLIC_API_URL no .env (veja .env.example).
 */
-const fallback = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+const RAILWAY_API_URL = 'https://verdant-nest-production.up.railway.app';
 
-export const API_URL = (process.env.EXPO_PUBLIC_API_URL || fallback).replace(/\/$/, '');
+export const API_URL = (process.env.EXPO_PUBLIC_API_URL || RAILWAY_API_URL).replace(/\/$/, '');

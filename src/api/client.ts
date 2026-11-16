@@ -109,7 +109,11 @@ const translate = (message: string) => API_MESSAGES_PT[message] ?? message;
 // Mensagem amigável a partir de um erro da API (NestJS) ou de rede
 export function getErrorMessage(error: unknown, fallback = 'Algo deu errado. Tente novamente.'): string {
   if (isAxiosError<ApiErrorBody>(error)) {
-    if (!error.response) return 'Não foi possível conectar ao servidor.';
+    if (!error.response) {
+      // Em desenvolvimento mostra o endereço tentado: ajuda a achar .env/IP errado no celular
+      const target = error.config?.baseURL;
+      return __DEV__ && target ? `Não foi possível conectar ao servidor (${target}).` : 'Não foi possível conectar ao servidor.';
+    }
     const message = error.response.data?.message;
     if (Array.isArray(message)) return message[0] ? translate(message[0]) : fallback;
     if (typeof message === 'string') return translate(message);

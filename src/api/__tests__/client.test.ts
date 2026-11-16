@@ -114,6 +114,6 @@ describe('🧾 getErrorMessage', () => {
 
   it('avisa quando não há resposta (sem rede)', () => {
     const config = { headers: new AxiosHeaders() } as InternalAxiosRequestConfig;
-    expect(getErrorMessage(new AxiosError('Network Error', 'ERR_NETWORK', config))).toBe('Não foi possível conectar ao servidor.');
+    expect(getErrorMessage(new AxiosError('Network Error', 'ERR_NETWORK', config))).toMatch(/^Não foi possível conectar ao servidor/);
   });
 });

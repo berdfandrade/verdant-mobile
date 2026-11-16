@@ -34,13 +34,14 @@
 
 ## Como rodar
 
-**Pré-requisitos:** Node 20+ e a [API verdant-nest](https://github.com/berdfandrade/verdant-nest) rodando (por padrão em `http://localhost:3000`).
+**Pré-requisitos:** Node 20+. Por padrão o app usa a [API verdant-nest](https://github.com/berdfandrade/verdant-nest) hospedada no Railway (`https://verdant-nest-production.up.railway.app`), então não precisa rodar nada além do Expo.
 
 ```bash
 npm install
-cp .env.example .env   # ajuste EXPO_PUBLIC_API_URL
 npm start              # abre o Expo (QR code, Android, iOS ou web)
 ```
+
+Para usar a API rodando localmente, copie `.env.example` para `.env` e defina `EXPO_PUBLIC_API_URL`:
 
 | Onde roda o app | `EXPO_PUBLIC_API_URL` |
 | --- | --- |
@@ -48,7 +49,7 @@ npm start              # abre o Expo (QR code, Android, iOS ou web)
 | Emulador Android | `http://10.0.2.2:3000` |
 | Celular físico (Expo Go ou dev build) | `http://<IP-da-sua-máquina>:3000` (mesma rede Wi-Fi) |
 
-> Sem a variável, o app usa `10.0.2.2` no Android e `localhost` no resto.
+> A variável entra no bundle na hora do build: depois de mudar o `.env`, reinicie com `npx expo start --clear`.
 
 ### Scripts
 
