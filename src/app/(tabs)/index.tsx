@@ -1,15 +1,16 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Modal, Pressable, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getErrorMessage, getStatus } from '@/api/client';
 import { likesApi, profileApi } from '@/api/endpoints';
 import type { FeedProfile } from '@/api/types';
-import { SwipeCard, type SwipeCardHandle, type SwipeDirection } from '@/components/swipe-deck';
-import { AppText, Avatar, Button, CenteredState, Icon, Loading, Screen, type IconName } from '@/components/ui';
+import { SwipeCard, type SwipeDirection } from '@/components/swipe-deck';
+import { AppText, Button, CenteredState, Icon, Image, Loading, Logo, SafeAreaView, Screen } from '@/components/ui';
+import { useMe } from '@/hooks/use-me';
 import { useSyncLocation } from '@/hooks/use-sync-location';
-import { cn } from '@/lib/cn';
 import { firstName, mainPhoto } from '@/lib/profile';
 import { queryKeys } from '@/lib/query-client';
 
@@ -21,7 +22,6 @@ interface MatchInfo {
 export default function DiscoverScreen() {
   const queryClient = useQueryClient();
   const location = useSyncLocation();
-  const cardRef = useRef<SwipeCardHandle>(null);
 
   // Perfis já decididos nesta sessão saem da pilha na hora (sem esperar o refetch)
   const [decided, setDecided] = useState<Set<string>>(new Set());
@@ -36,7 +36,6 @@ export default function DiscoverScreen() {
     onSuccess: (result, { profile }) => {
       if (result?.match) {
         setMatch({ profile, conversationId: result.conversationId });
-        queryClient.invalidateQueries({ queryKey: queryKeys.matches });
         queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
       }
     },
@@ -101,12 +100,14 @@ export default function DiscoverScreen() {
       );
     }
 
+    const about = current.description?.[0];
+
     return (
-      <>
-        <View className="my-2 flex-1">
+      <View className="flex-1 gap-3 pb-3">
+        <View className="flex-1">
           {/* O próximo perfil fica atrás, pronto para aparecer */}
           {next ? <SwipeCard key={next._id} profile={next} onSwiped={() => undefined} /> : null}
-          <SwipeCard key={current._id} ref={cardRef} profile={current} onSwiped={handleSwiped} />
+          <SwipeCard key={current._id} profile={current} onSwiped={handleSwiped} />
         </View>
 
         {actionError ? (
@@ -115,23 +116,44 @@ export default function DiscoverScreen() {
           </AppText>
         ) : null}
 
-        <View className="flex-row justify-center gap-8 py-4">
-          <RoundAction icon="close" tone="pass" label="Passar" onPress={() => cardRef.current?.swipe('pass')} />
-          <RoundAction icon="heart" tone="like" label="Curtir" onPress={() => cardRef.current?.swipe('like')} />
-        </View>
-      </>
+        {about || current.interests?.length ? (
+          <View className="gap-2 rounded-3xl bg-surface p-4">
+            <AppText variant="overline">Sobre mim</AppText>
+            {about ? <AppText numberOfLines={3}>{about}</AppText> : null}
+            {current.interests?.length ? (
+              <View className="flex-row flex-wrap gap-1.5">
+                {current.interests.slice(0, 5).map(interest => (
+                  <View key={interest} className="rounded-full bg-primary-soft px-3 py-1">
+                    <AppText variant="caption" tone="primary" className="font-semibold">
+                      {interest}
+                    </AppText>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+      </View>
     );
   };
 
   return (
     <Screen>
-      <View className="py-2">
-        <AppText variant="subtitle">Descobrir</AppText>
+      <View className="flex-row items-center justify-between py-3">
+        <View className="size-10" />
+        <Logo size="sm" />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Preferências do feed"
+          onPress={() => router.navigate('/profile')}
+          className="size-10 items-center justify-center rounded-full active:bg-surface">
+          <Icon name="options-outline" size={22} colorClassName="accent-foreground" />
+        </Pressable>
       </View>
 
       {renderBody()}
 
-      <MatchModal
+      <MatchScreen
         match={match}
         onClose={() => setMatch(null)}
         onOpenChat={conversationId => {
@@ -143,37 +165,8 @@ export default function DiscoverScreen() {
   );
 }
 
-const roundTones = {
-  like: { border: 'border-like', accent: 'accent-like' },
-  pass: { border: 'border-pass', accent: 'accent-pass' },
-} as const;
-
-function RoundAction({
-  icon,
-  tone,
-  label,
-  onPress,
-}: {
-  icon: IconName;
-  tone: keyof typeof roundTones;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      className={cn(
-        'size-[68px] items-center justify-center rounded-full border-2 bg-background shadow-md active:scale-95 active:opacity-70',
-        roundTones[tone].border,
-      )}>
-      <Icon name={icon} size={32} colorClassName={roundTones[tone].accent} />
-    </Pressable>
-  );
-}
-
-function MatchModal({
+// Tela cheia verde de match (Figma: 04 · Match)
+function MatchScreen({
   match,
   onClose,
   onOpenChat,
@@ -182,32 +175,94 @@ function MatchModal({
   onClose: () => void;
   onOpenChat: (conversationId: string) => void;
 }) {
+  const queryClient = useQueryClient();
+  const me = useMe();
+
+  const undo = useMutation({
+    mutationFn: (profileId: string) => likesApi.unlike(profileId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      onClose();
+    },
+  });
+
+  const close = () => {
+    undo.reset();
+    onClose();
+  };
+
   return (
-    <Modal visible={!!match} transparent animationType="fade" onRequestClose={onClose}>
-      <View className="flex-1 items-center justify-center bg-black/60 p-6">
-        <View className="w-full max-w-[380px] items-center gap-4 rounded-3xl bg-background p-6">
-          <AppText variant="title" tone="primary">
-            É um match!
-          </AppText>
-          {match ? (
-            <>
-              <Avatar uri={mainPhoto(match.profile)} name={match.profile.fullName} size={112} />
-              <AppText className="text-center">
-                Você e {firstName(match.profile.fullName)} se curtiram. Que tal mandar a primeira mensagem?
+    <Modal visible={!!match} animationType="fade" onRequestClose={close}>
+      <StatusBar style="light" />
+      <SafeAreaView className="flex-1 bg-primary">
+        {match ? (
+          <View className="w-full max-w-content flex-1 items-center justify-center gap-6 self-center px-6">
+            <View className="h-[230px] w-full items-center justify-center">
+              <Icon name="sparkles" size={22} colorClassName="accent-white" className="absolute left-6 top-4" />
+              <Icon name="sparkles" size={16} colorClassName="accent-white/80" className="absolute bottom-2 right-10" />
+              <MatchPhoto uri={mainPhoto(me.data)} name={me.data?.fullName} className="-mr-6 -rotate-[8deg]" />
+              <MatchPhoto uri={mainPhoto(match.profile)} name={match.profile.fullName} className="-ml-6 mt-6 rotate-[8deg]" />
+            </View>
+
+            <View className="items-center gap-1">
+              <AppText variant="display" tone="white">
+                Match!
               </AppText>
+              <AppText tone="white-soft" className="text-center">
+                Rolou uma conexão entre você e {firstName(match.profile.fullName)}!
+              </AppText>
+            </View>
+
+            <View className="w-full gap-2">
               {match.conversationId ? (
                 <Button
-                  title="Mandar mensagem"
-                  icon="chatbubble"
-                  className="self-stretch"
+                  title="Conversar agora"
+                  variant="light"
+                  icon="chatbubble-outline"
                   onPress={() => onOpenChat(match.conversationId!)}
                 />
               ) : null}
-            </>
-          ) : null}
-          <Button title="Continuar descobrindo" variant="ghost" onPress={onClose} />
-        </View>
-      </View>
+              <Pressable accessibilityRole="button" onPress={close} className="items-center py-3 active:opacity-70">
+                <AppText tone="white" className="font-bold">
+                  Continuar descobrindo
+                </AppText>
+              </Pressable>
+            </View>
+
+            {undo.error ? (
+              <AppText tone="white" className="text-center">
+                {getErrorMessage(undo.error)}
+              </AppText>
+            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => undo.mutate(match.profile._id)}
+              disabled={undo.isPending}
+              className="flex-row items-center gap-1.5 rounded-full bg-black/80 px-4 py-2 active:opacity-80 disabled:opacity-60">
+              <Icon name="close" size={14} colorClassName="accent-white" />
+              <AppText variant="caption" tone="white" className="font-semibold">
+                {undo.isPending ? 'Desfazendo…' : 'Desfazer o match'}
+              </AppText>
+            </Pressable>
+          </View>
+        ) : null}
+      </SafeAreaView>
     </Modal>
+  );
+}
+
+function MatchPhoto({ uri, name, className }: { uri?: string; name?: string; className: string }) {
+  return (
+    <View className={`h-[180px] w-[140px] overflow-hidden rounded-2xl border-4 border-white bg-white/20 shadow-lg ${className}`}>
+      {uri ? (
+        <Image source={{ uri }} className="flex-1" contentFit="cover" accessibilityLabel={name} />
+      ) : (
+        <View className="flex-1 items-center justify-center">
+          <AppText tone="white" className="text-[56px] leading-[64px] font-extrabold">
+            {firstName(name).charAt(0)}
+          </AppText>
+        </View>
+      )}
+    </View>
   );
 }

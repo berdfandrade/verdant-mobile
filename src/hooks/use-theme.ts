@@ -2,7 +2,7 @@ import { useCSSVariable } from 'uniwind';
 
 // Tokens definidos em src/global.css. Use className sempre que possível;
 // este hook é só para props que exigem cor em JS (navegação, ícones, RefreshControl…).
-const TOKENS = ['primary', 'on-primary', 'foreground', 'muted', 'background', 'line', 'like', 'pass'] as const;
+const TOKENS = ['primary', 'on-primary', 'foreground', 'muted', 'background', 'surface', 'line'] as const;
 
 export type ThemeToken = (typeof TOKENS)[number];
 

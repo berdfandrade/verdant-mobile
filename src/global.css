@@ -1,41 +1,48 @@
 @import 'tailwindcss';
 @import 'uniwind';
 
-/* Paleta do Verdant (verde). Cada token vira utilitário: bg-primary, text-muted, border-line… */
+/* Paleta do Verdant 2.0 (Figma). Cada token vira utilitário: bg-primary, text-muted, border-line…
+   background = fundo cinza das telas; surface = cartões brancos por cima dele. */
 @layer theme {
   :root {
     @variant light {
-      --color-foreground: #0f1f17;
-      --color-muted: #5b6b63;
-      --color-background: #ffffff;
-      --color-surface: #f2f6f3;
-      --color-line: #dce5df;
-      --color-primary: #1f7a54;
+      --color-foreground: #14171f;
+      --color-muted: #8a909a;
+      --color-background: #f2f3f5;
+      --color-surface: #ffffff;
+      --color-line: #e6e8eb;
+      --color-primary: #10ad5e;
+      --color-primary-soft: #e3f8ec;
       --color-on-primary: #ffffff;
-      --color-like: #1f9d63;
-      --color-pass: #d64545;
-      --color-danger: #c23b3b;
-      --color-bubble-mine: #1f7a54;
+      --color-ink: #0b0d12;
+      --color-on-ink: #ffffff;
+      --color-like: #10ad5e;
+      --color-pass: #e5484d;
+      --color-danger: #e5484d;
+      --color-bubble-mine: #10ad5e;
       --color-bubble-mine-text: #ffffff;
-      --color-bubble-theirs: #eef2ef;
-      --color-bubble-theirs-text: #0f1f17;
+      --color-bubble-theirs: #ffffff;
+      --color-bubble-theirs-text: #14171f;
     }
 
     @variant dark {
-      --color-foreground: #eaf2ec;
-      --color-muted: #9db0a5;
-      --color-background: #0b1410;
-      --color-surface: #15211b;
-      --color-line: #24352c;
-      --color-primary: #3fb07f;
-      --color-on-primary: #04130c;
-      --color-like: #3fcb86;
-      --color-pass: #f06a6a;
-      --color-danger: #f06a6a;
-      --color-bubble-mine: #2e8f64;
+      --color-foreground: #eef0f3;
+      --color-muted: #8f96a1;
+      --color-background: #0b0d12;
+      --color-surface: #171a21;
+      --color-line: #262a33;
+      --color-primary: #19c46d;
+      --color-primary-soft: #11301f;
+      --color-on-primary: #ffffff;
+      --color-ink: #ffffff;
+      --color-on-ink: #0b0d12;
+      --color-like: #19c46d;
+      --color-pass: #f2555a;
+      --color-danger: #f2555a;
+      --color-bubble-mine: #10ad5e;
       --color-bubble-mine-text: #ffffff;
-      --color-bubble-theirs: #1c2a23;
-      --color-bubble-theirs-text: #eaf2ec;
+      --color-bubble-theirs: #1f232b;
+      --color-bubble-theirs-text: #eef0f3;
     }
   }
 }

@@ -1,5 +1,4 @@
-import { forwardRef, useImperativeHandle } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { Pressable, View, useWindowDimensions } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   Extrapolation,
@@ -13,14 +12,11 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import type { FeedProfile } from '@/api/types';
 import { BottomShade } from '@/components/bottom-shade';
-import { AppText, Image } from '@/components/ui';
+import { AppText, Icon, Image, type IconName } from '@/components/ui';
+import { cn } from '@/lib/cn';
 import { ageFrom, firstName, formatDistance, mainPhoto } from '@/lib/profile';
 
 export type SwipeDirection = 'like' | 'pass';
-
-export interface SwipeCardHandle {
-  swipe: (direction: SwipeDirection) => void;
-}
 
 interface SwipeCardProps {
   profile: FeedProfile;
@@ -31,10 +27,8 @@ interface SwipeCardProps {
 const SWIPE_THRESHOLD = 0.28;
 const VELOCITY_THRESHOLD = 800;
 
-export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function SwipeCard(
-  { profile, onSwiped },
-  ref,
-) {
+// Card do Descobrir (Figma: 03 · Descobrir): foto, dados e os botões de passar/curtir
+export function SwipeCard({ profile, onSwiped }: SwipeCardProps) {
   const { width } = useWindowDimensions();
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -48,9 +42,6 @@ export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function Sw
       if (done) scheduleOnRN(finish, direction);
     });
   };
-
-  // Botões de like/pass também animam o card
-  useImperativeHandle(ref, () => ({ swipe: direction => flyAway(direction) }));
 
   const pan = usePanGesture({
     onUpdate: event => {
@@ -87,11 +78,13 @@ export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function Sw
 
   const photo = mainPhoto(profile);
   const age = ageFrom(profile.birthDate);
+  const name = firstName(profile.fullName);
+  const distance = formatDistance(profile.distance);
 
   return (
     <GestureDetector gesture={pan}>
       <Animated.View
-        accessibilityLabel={`Perfil de ${firstName(profile.fullName)}`}
+        accessibilityLabel={`Perfil de ${name}`}
         className="absolute inset-0 overflow-hidden rounded-3xl bg-surface shadow-lg"
         style={cardStyle}>
         {photo ? (
@@ -99,52 +92,85 @@ export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function Sw
         ) : (
           <View className="absolute inset-0 items-center justify-center bg-primary">
             <AppText tone="none" className="text-[120px] leading-[140px] font-extrabold text-white/85">
-              {firstName(profile.fullName).charAt(0)}
+              {name.charAt(0)}
             </AppText>
           </View>
         )}
 
+        {profile.verified ? (
+          <View className="absolute left-4 top-4 z-10 flex-row items-center gap-1 rounded-full bg-black/45 px-3 py-1">
+            <Icon name="checkmark-circle" size={14} colorClassName="accent-primary" />
+            <AppText variant="micro" tone="white" className="font-semibold">
+              Perfil verificado
+            </AppText>
+          </View>
+        ) : null}
+
         <Animated.View
-          className="absolute left-6 top-8 z-10 -rotate-[14deg] rounded-lg border-[3px] border-like px-2 py-1"
+          className="absolute left-6 top-14 z-10 -rotate-[14deg] rounded-lg border-[3px] border-like px-2 py-1"
           style={likeStyle}>
           <AppText tone="none" className="text-[28px] leading-8 font-extrabold text-like">
             CURTIR
           </AppText>
         </Animated.View>
         <Animated.View
-          className="absolute right-6 top-8 z-10 rotate-[14deg] rounded-lg border-[3px] border-pass px-2 py-1"
+          className="absolute right-6 top-14 z-10 rotate-[14deg] rounded-lg border-[3px] border-pass px-2 py-1"
           style={passStyle}>
           <AppText tone="none" className="text-[28px] leading-8 font-extrabold text-pass">
             PASSAR
           </AppText>
         </Animated.View>
 
-        <BottomShade className="absolute inset-x-0 bottom-0 gap-1 p-6 pt-16">
-          <AppText variant="title" tone="white">
-            {firstName(profile.fullName)}
+        <BottomShade className="absolute inset-x-0 bottom-0 gap-1.5 p-5 pt-20">
+          <AppText tone="white" className="text-[26px] leading-8 font-extrabold">
+            {name}
             {age !== null ? `, ${age}` : ''}
           </AppText>
-          <AppText tone="white-soft">
-            {[profile.profession?.[0], formatDistance(profile.distance)].filter(Boolean).join(' · ')}
-          </AppText>
-          {profile.description?.[0] ? (
-            <AppText numberOfLines={2} tone="white-soft">
-              {profile.description[0]}
-            </AppText>
-          ) : null}
-          {profile.interests?.length ? (
-            <View className="mt-2 flex-row flex-wrap gap-1">
-              {profile.interests.slice(0, 4).map(interest => (
-                <View key={interest} className="rounded-full bg-white/20 px-2 py-0.5">
-                  <AppText variant="caption" tone="white">
-                    {interest}
-                  </AppText>
-                </View>
-              ))}
-            </View>
-          ) : null}
+          {profile.profession?.[0] ? <InfoLine icon="briefcase-outline" text={profile.profession[0]} /> : null}
+          {distance ? <InfoLine icon="location-outline" text={`a ${distance} de você`} /> : null}
+
+          <View className="mt-3 flex-row items-center justify-center gap-5">
+            <RoundAction icon="close" label="Passar" onPress={() => flyAway('pass')} />
+            <RoundAction icon="heart" label="Curtir" primary onPress={() => flyAway('like')} />
+          </View>
         </BottomShade>
       </Animated.View>
     </GestureDetector>
   );
-});
+}
+
+function InfoLine({ icon, text }: { icon: IconName; text: string }) {
+  return (
+    <View className="flex-row items-center gap-1.5">
+      <Icon name={icon} size={15} colorClassName="accent-white" />
+      <AppText variant="caption" tone="white-soft" numberOfLines={1}>
+        {text}
+      </AppText>
+    </View>
+  );
+}
+
+function RoundAction({
+  icon,
+  label,
+  primary = false,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  primary?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      className={cn(
+        'items-center justify-center rounded-full shadow-md active:scale-95 active:opacity-80',
+        primary ? 'size-16 bg-primary' : 'size-[52px] bg-white',
+      )}>
+      <Icon name={icon} size={primary ? 30 : 26} colorClassName={primary ? 'accent-white' : 'accent-pass'} />
+    </Pressable>
+  );
+}

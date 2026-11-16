@@ -1,27 +1,29 @@
 import '../global.css';
 
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { useUniwind } from 'uniwind';
 
 import { useTheme } from '@/hooks/use-theme';
 import { queryClient } from '@/lib/query-client';
+import { restoreThemePreference } from '@/lib/theme-preference';
 import { useAuth } from '@/store/auth';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const scheme = useColorScheme();
+  const { theme: scheme } = useUniwind();
   const theme = useTheme();
   const status = useAuth(state => state.status);
   const bootstrap = useAuth(state => state.bootstrap);
 
   useEffect(() => {
     bootstrap();
+    restoreThemePreference();
   }, [bootstrap]);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export default function RootLayout() {
       ...base.colors,
       primary: theme.primary,
       background: theme.background,
-      card: theme.background,
+      card: theme.surface,
       text: theme.foreground,
       border: theme.line,
     },
@@ -50,7 +52,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={navigationTheme}>
-          <StatusBar style="auto" />
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Protected guard={isSignedIn}>
               <Stack.Screen name="(tabs)" />

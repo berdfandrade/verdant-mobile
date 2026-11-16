@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { Link } from 'expo-router';
 
 import { getErrorMessage } from '@/api/client';
-import { AppText, Button, Image, Screen, TextField } from '@/components/ui';
+import { AppText, Button, Screen, TextField } from '@/components/ui';
 import { isValidEmail } from '@/lib/validation';
 import { useAuth } from '@/store/auth';
 
@@ -30,17 +30,12 @@ export default function LoginScreen() {
   };
 
   return (
-    <Screen edges={['top', 'bottom']}>
+    <Screen edges={['bottom']}>
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerClassName="grow justify-center gap-4 py-8" keyboardShouldPersistTaps="handled">
-          <View className="mb-4 items-center gap-1">
-            <Image
-              source={require('@/assets/images/logo.png')}
-              className="h-16 w-[220px]"
-              contentFit="contain"
-              accessibilityLabel="Verdant"
-            />
-            <AppText variant="caption">Conheça pessoas perto de você</AppText>
+        <ScrollView contentContainerClassName="grow gap-4 py-6" keyboardShouldPersistTaps="handled">
+          <View className="mb-2 gap-1">
+            <AppText variant="title">Bem-vindo de volta</AppText>
+            <AppText variant="caption">Entre com o e-mail e a senha da sua conta.</AppText>
           </View>
 
           <TextField

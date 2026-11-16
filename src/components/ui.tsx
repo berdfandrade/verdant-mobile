@@ -24,19 +24,35 @@ export const Icon = withUniwind(Ionicons);
 
 export type IconName = keyof typeof Ionicons.glyphMap;
 
+// ---------- Marca ----------
+
+// Folha + "Verdant". tone="white" para fundos verdes
+export function Logo({ size = 'md', tone = 'primary' }: { size?: 'sm' | 'md' | 'lg'; tone?: 'primary' | 'white' }) {
+  const dims = { sm: { icon: 18, text: 'text-lg' }, md: { icon: 26, text: 'text-2xl' }, lg: { icon: 40, text: 'text-[40px] leading-[48px]' } }[size];
+  return (
+    <View accessibilityRole="image" accessibilityLabel="Verdant" className="flex-row items-center gap-1.5">
+      <Icon name="leaf" size={dims.icon} colorClassName={tone === 'white' ? 'accent-white' : 'accent-primary'} />
+      <Text className={cn(dims.text, 'font-extrabold', tone === 'white' ? 'text-white' : 'text-foreground')}>Verdant</Text>
+    </View>
+  );
+}
+
 // ---------- Texto ----------
 
-type TextVariant = 'title' | 'subtitle' | 'body' | 'label' | 'caption' | 'micro';
+type TextVariant = 'display' | 'title' | 'subtitle' | 'body' | 'label' | 'caption' | 'overline' | 'micro';
 
 // 'none': a cor vem do className de quem usa
 type TextTone = 'none' | 'default' | 'muted' | 'primary' | 'danger' | 'white' | 'white-soft';
 
 const textVariants: Record<TextVariant, string> = {
-  title: 'text-[30px] leading-9 font-bold',
+  display: 'text-[44px] leading-[52px] font-extrabold',
+  title: 'text-[28px] leading-9 font-bold',
   subtitle: 'text-xl leading-[26px] font-bold',
   body: 'text-base leading-[22px]',
   label: 'text-sm leading-5 font-semibold',
   caption: 'text-[13px] leading-[18px]',
+  // Rótulo de seção em caixa alta ("NOVOS MATCHES")
+  overline: 'text-[11px] leading-[14px] font-bold uppercase tracking-wider',
   micro: 'text-[11px] leading-[14px]',
 };
 
@@ -57,7 +73,7 @@ export function AppText({
   className,
   ...rest
 }: TextProps & { variant?: TextVariant; tone?: TextTone }) {
-  const color = textTones[tone ?? (variant === 'caption' || variant === 'micro' ? 'muted' : 'default')];
+  const color = textTones[tone ?? (variant === 'caption' || variant === 'overline' || variant === 'micro' ? 'muted' : 'default')];
   return <Text className={cn(textVariants[variant], color, className)} {...rest} />;
 }
 
@@ -83,10 +99,14 @@ export function Screen({
 
 // ---------- Botão ----------
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+// ink: preto (branco no tema escuro). light e black: cores fixas, para usar sobre fundo verde
+type ButtonVariant = 'primary' | 'ink' | 'light' | 'black' | 'secondary' | 'ghost' | 'danger';
 
 const buttonVariants: Record<ButtonVariant, { container: string; text: string; accent: string }> = {
   primary: { container: 'bg-primary', text: 'text-on-primary', accent: 'accent-on-primary' },
+  ink: { container: 'bg-ink', text: 'text-on-ink', accent: 'accent-on-ink' },
+  light: { container: 'bg-white', text: 'text-[#14171f]', accent: 'accent-[#14171f]' },
+  black: { container: 'bg-black', text: 'text-white', accent: 'accent-white' },
   secondary: { container: 'bg-surface border border-line', text: 'text-foreground', accent: 'accent-foreground' },
   ghost: { container: 'bg-transparent', text: 'text-primary', accent: 'accent-primary' },
   danger: { container: 'bg-transparent', text: 'text-danger', accent: 'accent-danger' },
@@ -252,7 +272,7 @@ export function CenteredState({
   return (
     <View className="flex-1 items-center justify-center gap-4 p-6">
       {icon && (
-        <View className="size-20 items-center justify-center rounded-full bg-surface">
+        <View className="size-20 items-center justify-center rounded-full bg-primary-soft">
           <Icon name={icon} size={40} colorClassName="accent-primary" />
         </View>
       )}

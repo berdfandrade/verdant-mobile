@@ -1,15 +1,18 @@
 import { useState, type ReactNode } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import Constants from 'expo-constants';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { getErrorMessage } from '@/api/client';
 import { profileApi } from '@/api/endpoints';
 import type { Preferences } from '@/api/types';
-import { AppText, Avatar, Button, CenteredState, Icon, Loading, Screen, TextField, type IconName } from '@/components/ui';
+import { AppText, Avatar, Button, CenteredState, Icon, Loading, Logo, Screen, TextField, type IconName } from '@/components/ui';
 import { useMe } from '@/hooks/use-me';
 import { useSyncLocation } from '@/hooks/use-sync-location';
+import { cn } from '@/lib/cn';
 import { ageFrom, mainPhoto } from '@/lib/profile';
 import { queryKeys } from '@/lib/query-client';
+import { currentThemePreference, setThemePreference, type ThemePreference } from '@/lib/theme-preference';
 import { useAuth } from '@/store/auth';
 
 const MIN_AGE = 18;
@@ -55,51 +58,120 @@ export default function ProfileScreen() {
 
   return (
     <Screen padded={false}>
-      <ScrollView contentContainerClassName="gap-4 p-4 pb-8" keyboardShouldPersistTaps="handled">
-        <View className="items-center gap-1 py-4">
-          <View className="mb-2 rounded-full border-2 border-primary p-1">
-            <Avatar uri={mainPhoto(user)} name={user.fullName} size={96} />
+      <ScrollView contentContainerClassName="gap-4 px-4 pb-8" keyboardShouldPersistTaps="handled">
+        <AppText variant="title" className="pt-2">
+          Configurações
+        </AppText>
+
+        <View className="flex-row items-center gap-4 rounded-3xl bg-surface p-4">
+          <Avatar uri={mainPhoto(user)} name={user.fullName} size={60} />
+          <View className="flex-1 gap-0.5">
+            <AppText className="font-bold" numberOfLines={1}>
+              {user.fullName}
+              {age !== null ? `, ${age}` : ''}
+            </AppText>
+            <AppText variant="caption" numberOfLines={1}>
+              {user.email}
+            </AppText>
+            {user.verified ? (
+              <View className="mt-1 flex-row items-center gap-1 self-start rounded-full bg-primary-soft px-2 py-0.5">
+                <Icon name="checkmark-circle" size={12} colorClassName="accent-primary" />
+                <AppText variant="micro" tone="primary" className="font-semibold">
+                  Perfil verificado
+                </AppText>
+              </View>
+            ) : null}
           </View>
-          <AppText variant="subtitle">
-            {user.fullName}
-            {age !== null ? `, ${age}` : ''}
-          </AppText>
-          <AppText variant="caption">{user.email}</AppText>
-          {user.verified ? (
-            <View className="mt-1 flex-row items-center gap-1 rounded-full bg-surface px-3 py-1">
-              <Icon name="checkmark-circle" size={14} colorClassName="accent-primary" />
-              <AppText variant="caption" tone="primary" className="font-semibold">
-                Perfil verificado
-              </AppText>
-            </View>
-          ) : null}
         </View>
 
         {/* key: recria o formulário com os valores do servidor ao trocar de usuário */}
         <PreferencesCard key={user._id} preferences={user.preferences} />
 
-        <Card icon="location" title="Localização">
-          <AppText variant="caption">{locationLabel || 'Usada para mostrar pessoas perto de você.'}</AppText>
-          <Button
-            title="Atualizar localização"
-            icon="location"
-            variant="secondary"
-            onPress={location.sync}
-            loading={location.status === 'updating'}
-          />
-        </Card>
+        <View className="rounded-3xl bg-surface px-4">
+          <Row icon="location-outline" title="Localização" subtitle={locationLabel || 'Usada para mostrar pessoas perto de você.'}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Atualizar localização"
+              onPress={location.sync}
+              disabled={location.status === 'updating'}
+              className="size-9 items-center justify-center rounded-full bg-background active:opacity-70 disabled:opacity-50">
+              <Icon name="refresh" size={18} colorClassName="accent-foreground" />
+            </Pressable>
+          </Row>
+          <View className="ml-12 h-hairline bg-line" />
+          <Row icon="sunny-outline" title="Tema">
+            <ThemeSwitch />
+          </Row>
+        </View>
 
-        <Button title="Sair" variant="danger" icon="log-out-outline" onPress={handleSignOut} loading={signingOut} />
+        <Button title="Sair" variant="ink" icon="log-out-outline" onPress={handleSignOut} loading={signingOut} />
+
+        <View className="items-center gap-1 pt-2">
+          <Logo size="sm" />
+          <AppText variant="micro">Versão {Constants.expoConfig?.version ?? ''}</AppText>
+        </View>
       </ScrollView>
     </Screen>
+  );
+}
+
+function Row({ icon, title, subtitle, children }: { icon: IconName; title: string; subtitle?: string; children?: ReactNode }) {
+  return (
+    <View className="flex-row items-center gap-3 py-3">
+      <View className="size-9 items-center justify-center rounded-full bg-primary-soft">
+        <Icon name={icon} size={18} colorClassName="accent-primary" />
+      </View>
+      <View className="flex-1">
+        <AppText variant="label">{title}</AppText>
+        {subtitle ? <AppText variant="caption">{subtitle}</AppText> : null}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+const THEME_OPTIONS: { label: string; value: ThemePreference }[] = [
+  { label: 'Auto', value: 'system' },
+  { label: 'Claro', value: 'light' },
+  { label: 'Escuro', value: 'dark' },
+];
+
+function ThemeSwitch() {
+  const [value, setValue] = useState(currentThemePreference);
+
+  const choose = (preference: ThemePreference) => {
+    setValue(preference);
+    setThemePreference(preference);
+  };
+
+  return (
+    <View accessibilityRole="radiogroup" className="flex-row rounded-full bg-background p-0.5">
+      {THEME_OPTIONS.map(option => {
+        const selected = option.value === value;
+        return (
+          <Pressable
+            key={option.value}
+            accessibilityRole="radio"
+            accessibilityState={{ selected }}
+            onPress={() => choose(option.value)}
+            className={cn('rounded-full px-3 py-1', selected && 'bg-surface shadow-sm')}>
+            <AppText variant="caption" tone={selected ? 'default' : 'muted'} className="font-semibold">
+              {option.label}
+            </AppText>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
 function Card({ icon, title, children }: { icon: IconName; title: string; children: ReactNode }) {
   return (
     <View className="gap-4 rounded-3xl bg-surface p-4">
-      <View className="flex-row items-center gap-2">
-        <Icon name={icon} size={18} colorClassName="accent-primary" />
+      <View className="flex-row items-center gap-3">
+        <View className="size-9 items-center justify-center rounded-full bg-primary-soft">
+          <Icon name={icon} size={18} colorClassName="accent-primary" />
+        </View>
         <AppText variant="label">{title}</AppText>
       </View>
       {children}
