@@ -57,6 +57,10 @@ export default function RootLayout() {
             <Stack.Protected guard={isSignedIn}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="chat/[id]" options={{ headerShown: true, title: '', headerBackTitle: 'Voltar' }} />
+              <Stack.Screen
+                name="dates/new"
+                options={{ headerShown: true, title: 'Marcar encontro', headerBackTitle: 'Voltar', presentation: 'modal' }}
+              />
             </Stack.Protected>
             <Stack.Protected guard={!isSignedIn}>
               <Stack.Screen name="(auth)" />

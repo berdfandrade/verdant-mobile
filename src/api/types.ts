@@ -147,6 +147,39 @@ export interface LikeResponse {
   conversationId?: Id;
 }
 
+// ---- Dates ----
+
+/** pending → accepted | declined; pending | accepted → canceled */
+export type DateStatus = 'pending' | 'accepted' | 'declined' | 'canceled';
+
+export interface DatePlace {
+  name: string;
+  address?: string;
+}
+
+/** Participante de um date: a API popula só nome, username e fotos */
+export type DateParticipant = Pick<PublicProfile, '_id' | 'fullName' | 'username' | 'photos'>;
+
+export interface DateInvite {
+  _id: Id;
+  inviter: DateParticipant;
+  invitee: DateParticipant;
+  place: DatePlace;
+  /** ISO 8601 */
+  scheduledAt: string;
+  status: DateStatus;
+  respondedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDateInvitePayload {
+  inviteeId: Id;
+  place: DatePlace;
+  /** ISO 8601 */
+  scheduledAt: string;
+}
+
 /** Erro padrão do NestJS */
 export interface ApiErrorBody {
   statusCode: number;

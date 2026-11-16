@@ -173,6 +173,7 @@ export default function ChatScreen() {
           visible={menuOpen}
           otherId={other._id}
           otherName={firstName(other.fullName)}
+          canInvite={isActive}
           onClose={() => setMenuOpen(false)}
         />
       ) : null}
@@ -200,16 +201,19 @@ function Bubble({ message, mine }: { message: Message; mine: boolean }) {
   );
 }
 
-// Folha de opções (Figma: 05a · Menu do chat). Só o que a API suporta: desfazer o match.
+// Folha de opções (Figma: 05a · Menu do chat): marcar um date e desfazer o match
 function ConversationMenu({
   visible,
   otherId,
   otherName,
+  canInvite,
   onClose,
 }: {
   visible: boolean;
   otherId: string;
   otherName: string;
+  /** Conversa encerrada = não é mais match, então não dá para convidar */
+  canInvite: boolean;
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
@@ -231,6 +235,17 @@ function ConversationMenu({
           <AppText variant="subtitle">
             Opções da conversa
           </AppText>
+          {canInvite ? (
+            <MenuItem
+              icon="calendar-outline"
+              title="Marcar encontro"
+              subtitle={`Convide ${otherName} para um date`}
+              onPress={() => {
+                onClose();
+                router.push({ pathname: '/dates/new', params: { inviteeId: otherId } });
+              }}
+            />
+          ) : null}
           <MenuItem
             icon="ban-outline"
             title={unmatch.isPending ? 'Desemparelhando…' : 'Desemparelhar'}

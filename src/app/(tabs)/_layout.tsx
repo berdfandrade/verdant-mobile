@@ -36,6 +36,7 @@ export default function TabsLayout() {
       }}>
       <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarIcon: icon('person-outline', 'person') }} />
       <Tabs.Screen name="index" options={{ title: 'Descobrir', tabBarIcon: icon('heart-outline', 'heart') }} />
+      <Tabs.Screen name="dates" options={{ title: 'Dates', tabBarIcon: icon('calendar-outline', 'calendar') }} />
       <Tabs.Screen name="connections" options={{ title: 'Conexões', tabBarIcon: icon('chatbubbles-outline', 'chatbubbles') }} />
     </Tabs>
   );

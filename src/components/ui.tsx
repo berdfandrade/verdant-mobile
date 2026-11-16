@@ -242,8 +242,11 @@ export function Avatar({ uri, name, size = 48 }: { uri?: string; name?: string; 
   const shape = { width: size, height: size };
 
   if (uri) {
+    // O tamanho fica no View: no web, o Image do Uniwind com width/height numéricos no style renderiza 0x0
     return (
-      <Image source={{ uri }} style={shape} className="rounded-full bg-surface" contentFit="cover" transition={150} />
+      <View style={shape} className="overflow-hidden rounded-full bg-surface">
+        <Image source={{ uri }} className="size-full" contentFit="cover" transition={150} />
+      </View>
     );
   }
 

@@ -2,7 +2,9 @@ import { api } from './client';
 import type {
   ConversationSummary,
   Conversation,
+  CreateDateInvitePayload,
   Credentials,
+  DateInvite,
   FeedProfile,
   Id,
   LikeResponse,
@@ -56,4 +58,16 @@ export const conversationsApi = {
 export const messagesApi = {
   send: (conversationId: Id, content: string) =>
     api.post<Message>('/messages', { conversationId, content }).then(r => r.data),
+};
+
+export const datesApi = {
+  invite: (payload: CreateDateInvitePayload) => api.post<DateInvite>('/dates', payload).then(r => r.data),
+  /** Dates pendentes e aceitos no intervalo. Sem `from`, só a partir de agora */
+  list: (range: { from?: string; to?: string } = {}) =>
+    api.get<DateInvite[]>('/dates', { params: range }).then(r => r.data),
+  /** Convites que recebi e ainda não respondi */
+  invites: () => api.get<DateInvite[]>('/dates/invites').then(r => r.data),
+  accept: (id: Id) => api.patch<DateInvite>(`/dates/${id}/accept`).then(r => r.data),
+  decline: (id: Id) => api.patch<DateInvite>(`/dates/${id}/decline`).then(r => r.data),
+  cancel: (id: Id) => api.patch<DateInvite>(`/dates/${id}/cancel`).then(r => r.data),
 };
