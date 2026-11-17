@@ -70,6 +70,13 @@ export interface FeedProfile extends PublicProfile {
   distance: number;
 }
 
+/** Item de GET /profile/search: sem localização minha, vem sem `distance` */
+export interface SearchResult extends PublicProfile {
+  distance?: number;
+  online: boolean;
+  isMatch: boolean;
+}
+
 /** O usuário logado (GET /users/me) */
 export interface Me extends PublicProfile {
   email: string;

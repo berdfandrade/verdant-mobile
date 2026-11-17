@@ -10,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import type { FeedProfile } from '@/api/types';
+import type { PublicProfile } from '@/api/types';
 import { BottomShade } from '@/components/bottom-shade';
 import { AppText, Icon, Image, type IconName } from '@/components/ui';
 import { cn } from '@/lib/cn';
@@ -18,9 +18,12 @@ import { ageFrom, firstName, formatDistance, mainPhoto } from '@/lib/profile';
 
 export type SwipeDirection = 'like' | 'pass';
 
-interface SwipeCardProps {
-  profile: FeedProfile;
-  onSwiped: (profile: FeedProfile, direction: SwipeDirection) => void;
+// Perfil do card: do feed (com distância) ou da busca (distância opcional)
+type CardProfile = PublicProfile & { distance?: number };
+
+interface SwipeCardProps<P extends CardProfile> {
+  profile: P;
+  onSwiped: (profile: P, direction: SwipeDirection) => void;
 }
 
 // Quanto o card precisa andar (fração da largura) para contar como like/pass
@@ -28,7 +31,7 @@ const SWIPE_THRESHOLD = 0.28;
 const VELOCITY_THRESHOLD = 800;
 
 // Card do Descobrir (Figma: 03 · Descobrir): foto, dados e os botões de passar/curtir
-export function SwipeCard({ profile, onSwiped }: SwipeCardProps) {
+export function SwipeCard<P extends CardProfile>({ profile, onSwiped }: SwipeCardProps<P>) {
   const { width } = useWindowDimensions();
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);

@@ -14,6 +14,7 @@ import type {
   Preferences,
   PublicProfile,
   RegisterPayload,
+  SearchResult,
 } from './types';
 
 /* Uma função por rota da API. Mantém as URLs num lugar só. */
@@ -31,6 +32,9 @@ export const usersApi = {
 
 export const profileApi = {
   feed: () => api.get<FeedProfile[]>('/profile/feed').then(r => r.data),
+  /** Pessoas pelo nome ou username (mín. 2 caracteres), das mais próximas às mais longe */
+  search: (q: string, { online = false } = {}) =>
+    api.get<SearchResult[]>('/profile/search', { params: { q, ...(online ? { online: 'true' } : {}) } }).then(r => r.data),
   getPreferences: () => api.get<Preferences>('/profile/preferences').then(r => r.data),
   updatePreferences: (preferences: Preferences) =>
     api.put<{ message: string }>('/profile/preferences', preferences).then(r => r.data),

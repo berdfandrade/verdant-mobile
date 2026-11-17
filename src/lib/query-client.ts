@@ -19,6 +19,8 @@ export const queryClient = new QueryClient({
 export const queryKeys = {
   me: ['me'] as const,
   feed: ['feed'] as const,
+  // Prefixo ['search'] invalida todas as buscas (ex.: depois de curtir alguém)
+  search: (q?: string, online?: boolean) => (q === undefined ? ['search'] : ['search', q, !!online]) as readonly unknown[],
   matches: ['matches'] as const,
   received: ['likes-received'] as const,
   conversations: ['conversations'] as const,
